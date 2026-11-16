@@ -1,0 +1,561 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>INVEST INTELLIGENCE PRO — сборка 19</title>
+<style>
+:root{--bg:#0d1117;--card:#161b26;--bord:#242c3a;--txt:#dfe6f0;--dim:#8b97a8;--blue:#4a9eff;--grn:#3fbf7f;--red:#e05555;--amb:#e0a340}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:15px/1.45 -apple-system,'Segoe UI',Roboto,Arial,sans-serif;padding-bottom:60px}
+header{padding:10px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+h1{font-size:19px;color:var(--blue)}h1 span{font-size:11px;color:var(--amb)}
+.badge{font-size:12px;padding:4px 10px;border-radius:14px;background:#1d2a1d;color:var(--grn);border:1px solid #2b3d2b}
+nav{display:flex;gap:6px;overflow-x:auto;padding:6px 10px;border-bottom:1px solid var(--bord)}
+nav button{white-space:nowrap;background:var(--card);border:1px solid var(--bord);color:var(--txt);padding:8px 14px;border-radius:9px;font-size:14px;cursor:pointer}
+nav button.on{background:#1c3a5c;border-color:var(--blue)}
+main{padding:12px;max-width:1200px;margin:0 auto}
+.tab{display:none}.tab.on{display:block}
+h2{margin:4px 0 12px;font-size:22px}
+.card{background:var(--card);border:1px solid var(--bord);border-radius:12px;padding:12px;margin-bottom:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--card);border:1px solid var(--bord);border-radius:12px;padding:10px}
+.kpi small{color:var(--dim)}.kpi b{font-size:20px;display:block;margin-top:4px}
+button,.btn{background:#1e3a5f;border:1px solid #2b4a70;color:var(--txt);padding:9px 14px;border-radius:9px;cursor:pointer;font-size:14px}
+button.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+button.dan{background:#5c1e1e;border-color:#7a2b2b}
+input,select,textarea{background:#0f141d;border:1px solid var(--bord);color:var(--txt);padding:9px;border-radius:8px;font-size:14px;width:100%}
+textarea{min-height:110px;resize:vertical}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--bord);white-space:nowrap}
+th{color:var(--dim);font-weight:600}
+.r{text-align:right}.grn{color:var(--grn)}.red{color:var(--red)}.dim{color:var(--dim)}.amb{color:var(--amb)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-bottom:8px}
+.row>div{flex:1;min-width:110px}
+.row label{display:block;font-size:12px;color:var(--dim);margin-bottom:3px}
+canvas{width:100%;display:block;border:1px solid var(--bord);border-radius:10px;background:#0b0f16;touch-action:none}
+.tip{position:fixed;pointer-events:none;background:#1c2431;border:1px solid var(--bord);padding:6px 9px;border-radius:8px;font-size:12px;z-index:60;display:none;white-space:pre}
+.badge2{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;background:#1c3a5c}
+.modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:80;display:flex;align-items:center;justify-content:center;padding:14px}
+.modal{background:#1a2230;border:1px solid #2c3a50;border-radius:14px;padding:16px;max-width:420px;width:100%}
+.modal h3{margin-bottom:10px;color:var(--blue)}
+.hint{font-size:12px;color:var(--red);margin-top:3px;display:none}
+.hint.on{display:block}
+.pill{padding:5px 12px;border-radius:16px;font-size:13px;background:#1b2330;border:1px solid var(--bord);cursor:pointer}
+.pill.on{background:#1c3a5c;border-color:var(--blue)}
+.footer-note{font-size:12px;color:var(--dim);margin-top:6px}
+</style></head><body>
+<header><h1>INVEST INTELLIGENCE <span>PRO</span> <small style="color:#888ea0;font-weight:600">· сборка 19</small></h1><div class="badge" id="ibadge">MOEX ISS: проверка…</div></header>
+<nav id="nav">
+<button data-s="overview" class="on">Обзор</button><button data-s="terminal">Терминал</button><button data-s="scanner">Сканер</button><button data-s="screener">Скринер</button><button data-s="backtest">Бэктест</button><button data-s="portfolio">Портфель</button><button data-s="analytics">Аналитика</button><button data-s="alloc">Аллокация</button><button data-s="risk">Риск</button><button data-s="strat">Стратегии</button><button data-s="bridge">Мост</button><button data-s="settings">Настройки</button>
+</nav>
+<main>
+<section id="sec-overview" class="tab on">
+<h2>Обзор</h2>
+<div class="kpis" id="ov_kpis"></div>
+<div class="card"><b>Котировки портфеля</b>
+<div class="row" style="margin-top:8px"><div style="flex:0 0 auto"><button class="pri" onclick="refreshQuotes()">Обновить котировки</button></div><div style="max-width:180px"><select id="ov_auto" onchange="setAuto(this.value)"><option value="0">авто: выкл</option><option value="15">каждые 15 с</option><option value="60">каждую минуту</option><option value="300">каждые 5 мин</option></select></div></div>
+<div id="ov_quotes" class="footer-note">Добавьте позиции в «Портфеле», чтобы видеть котировки.</div></div>
+<div class="card"><b>Позиции</b><div id="ov_pos" class="footer-note">Позиций нет. Внесите сделки через «Портфель».</div></div>
+<div class="card"><b>Свежие сигналы сканера</b><div id="ov_sig" class="footer-note">Откройте «Сканер» → «Сканировать рынок».</div></div>
+</section>
+<section id="sec-terminal" class="tab">
+<h2>Терминал</h2>
+<div class="card"><div class="row">
+<div><label>Тикер</label><input id="t_sym" value="SBER" style="text-transform:uppercase"></div>
+<div><label>Таймфрейм</label><select id="t_tf"><option value="D">Дневные</option><option value="W">Недельные</option><option value="H">Часовые</option><option value="M15">15 минут</option></select></div>
+<div style="flex:0 0 auto"><button class="pri" onclick="loadTerm()">Загрузить</button></div></div>
+<canvas id="t_chart" height="360"></canvas>
+<canvas id="ind_rsi" height="110" style="margin-top:6px"></canvas>
+<canvas id="ind_macd" height="110" style="margin-top:6px"></canvas>
+<div id="t_info" class="footer-note"></div></div>
+<div class="card"><b>План сделки</b><div id="t_plan" class="footer-note">Загрузите бумагу — план сформируется по ATR.</div></div>
+</section>
+<section id="sec-scanner" class="tab">
+<h2>Сканер</h2>
+<div class="card"><div class="row">
+<div><label>Таймфрейм</label><select id="s_tf"><option value="D">Дневные</option><option value="W">Недельные</option><option value="H">Часовые (срочные)</option><option value="M15">15 минут (скальп)</option></select></div>
+<div><label>Сколько бумаг</label><select id="s_top"><option value="60">Топ-60</option><option value="120">Топ-120</option><option value="200">Топ-200</option></select></div>
+<div><label>Фильтр</label><select id="s_filt"><option value="all">Все</option><option value="buy">Покупка</option><option value="sell">Продажа</option><option value="neu">Нейтрально</option></select></div>
+<div><label>Сортировка</label><select id="s_sort"><option value="sig">По силе сигнала</option><option value="chg">По изменению цены</option><option value="rsi">По RSI</option></select></div>
+<div style="flex:0 0 auto"><button class="pri" onclick="scanRun()">Сканировать рынок</button></div></div><div class="row" style="margin-top:8px"><div><label>Автообновление</label><select id="s_auto" onchange="setScanAuto(this.value)"><option value="0">выкл</option><option value="60">каждую минуту</option><option value="180">каждые 3 мин</option><option value="300">каждые 5 мин</option></select></div><div class="footer-note" id="s_last" style="align-self:flex-end"></div></div><div id="s_sig"></div>
+<div class="footer-note" id="s_status"></div></div>
+<div class="card" id="s_scanCard" style="display:none"><b>Результаты сканирования</b><div style="max-height:480px;overflow:auto"><table id="s_out"></table></div></div>
+<div class="card"><b>Свод по таймфреймам</b><div class="row"><div><label>Тикер</label><input id="uf_sym" placeholder="SBER" style="text-transform:uppercase"></div><div style="flex:0 0 auto"><button onclick="tfDigest()">Свод по таймфреймам</button></div></div><div id="s_uf"></div></div>
+<div class="card"><b>Когда фиксировать — по вашим позициям</b><div id="s_exit" class="footer-note">Список появится после сканирования и при наличии позиций.</div></div>
+</section>
+<section id="sec-screener" class="tab">
+<h2>Скринер</h2>
+<div class="card"><div class="row">
+<div style="flex:0 0 auto;display:flex;gap:6px"><button class="pri" onclick="scCat('all')">Все бумаги</button><button onclick="scCat('shares')">Все акции</button><button onclick="scCat('ofz')">Все ОФЗ</button><button onclick="scCat('bonds')">Корп. облигации</button><button onclick="scCat('funds')">Все фонды</button></div></div>
+<div class="row"><div><input id="sc_q" placeholder="Тикер, название или ISIN…" onkeydown="if(event.key==='Enter')scSearch()"></div><div style="flex:0 0 auto"><button class="pri" onclick="scSearch()">Найти</button></div></div>
+<div id="sc_out"></div></div>
+</section>
+<section id="sec-backtest" class="tab">
+<h2>Бэктест</h2>
+<div class="card"><div class="row">
+<div><label>Тикер</label><input id="bt_sym" value="SBER" style="text-transform:uppercase"></div>
+<div><label>Стратегия</label><select id="bt_str"><option value="sma">Пересечение SMA 20/50</option><option value="rsi">Покупка RSI&lt;30, продажа RSI&gt;55</option><option value="brk">Пробой максимума 20 дней</option></select></div>
+<div style="flex:0 0 auto"><button class="pri" onclick="runBT()">Прогнать</button></div></div>
+<div id="bt_out"></div><canvas id="bt_chart" height="260" style="margin-top:8px"></canvas></div>
+</section>
+<section id="sec-portfolio" class="tab">
+<h2>Портфель</h2>
+<div class="card"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pri" onclick="openOp()">+ Новая операция</button><button onclick="addAcct()">+ Счёт</button><button class="dan" onclick="if(confirm('Стереть все данные?'))hardReset()">Сброс</button></div></div>
+<div class="card"><b>Счета</b><div id="pf_accts" class="footer-note"></div></div>
+<div class="card"><b>Позиции (FIFO)</b><div id="pf_pos"></div></div>
+<div class="card"><b>Журнал операций</b><div style="max-height:340px;overflow:auto"><table id="pf_jrn"></table></div></div>
+</section>
+<section id="sec-analytics" class="tab">
+<h2>Аналитика</h2>
+<div class="card"><b>Структура по секторам</b><canvas id="an_donut" height="260"></canvas><div id="an_sect" class="footer-note"></div></div>
+<div class="card"><b>Пополнения и снятия</b><canvas id="an_flows" height="200"></canvas><div class="row" style="margin-top:8px"><div style="flex:0 0 auto"><button onclick="addFlow('in')">+ Пополнение</button></div><div style="flex:0 0 auto"><button onclick="addFlow('out')">+ Снятие</button></div></div></div>
+<div class="card"><b>Вложено против стоимости</b><canvas id="an_curve" height="240"></canvas></div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b>Снапшоты портфеля</b><button onclick="saveSnap()">Сохранить снапшот</button></div><div id="an_snaps" class="footer-note"></div></div>
+</section>
+<section id="sec-alloc" class="tab">
+<h2>Аллокация</h2>
+<div class="card"><b>Стратегия распределения</b><div class="row"><div><select id="al_str" onchange="renderAlloc()"></select></div></div><div id="al_desc" class="footer-note"></div></div>
+<div class="card"><b>Мини-тест профиля риска</b><div id="al_test"></div></div>
+<div class="card"><b>Портфель против цели</b><canvas id="al_cmp" height="280"></canvas><div id="al_tbl"></div></div>
+<div class="card"><b>Правила держателя</b><div id="al_rules" class="footer-note"></div></div>
+</section>
+<section id="sec-risk" class="tab">
+<h2>Риск-калькулятор</h2>
+<div class="card"><div class="row">
+<div><label>Капитал, ₽</label><input id="r_cap" inputmode="decimal"></div>
+<div><label>Риск на сделку, %</label><input id="r_rp" inputmode="decimal" value="2"></div>
+<div><label>Цена входа</label><input id="r_px" inputmode="decimal"></div>
+<div><label>Стоп</label><input id="r_sl" inputmode="decimal"></div>
+<div style="flex:0 0 auto"><button class="pri" onclick="calcRisk()">Рассчитать</button></div></div>
+<div id="r_out"></div></div>
+</section>
+<section id="sec-strat" class="tab">
+<h2>Стратегии</h2>
+<div class="card"><div style="display:flex;gap:8px"><button id="stb_ref" class="on" onclick="strTab('ref')">Справочник стратегий</button><button id="stb_edu" onclick="strTab('edu')">Обучение</button></div>
+<div id="st_ref"><div style="margin-top:10px"><input id="st_q" placeholder="Поиск…" oninput="renderStrat()"></div><div id="st_out" style="margin-top:10px"></div></div>
+<div id="st_edu" style="display:none"><div id="edu_out" style="margin-top:10px"></div></div>
+</div>
+</section>
+<section id="sec-bridge" class="tab">
+<h2>Мост</h2>
+<div class="card"><b>Импорт сделок из отчёта брокера</b>
+<div class="footer-note" style="margin:6px 0">Вставьте строки вида «SBER 10 274,50 2024-05-12» или «SBER куплено 10 по 274,5». Дата не обязательна.</div>
+<div class="row"><div><textarea id="br_txt" placeholder="SBER 10 274,5&#10;GAZP 20 128,3&#10;LQDT 500 1,99"></textarea></div></div>
+<div class="row"><div style="flex:0 0 auto"><button class="pri" onclick="brParse()">Разобрать</button></div><div style="max-width:200px"><select id="br_sel"></select></div></div>
+<div id="br_out"></div></div>
+<div class="card"><b>Отчёт для Алисы</b><div class="row"><div style="flex:0 0 auto"><button onclick="makeReport()">Сформировать отчёт</button></div><div style="flex:0 0 auto"><button onclick="copyReport()">Скопировать</button></div></div><div id="br_rep" class="footer-note"></div></div>
+</section>
+<section id="sec-settings" class="tab">
+<h2>Настройки</h2>
+<div class="card"><b>Основное</b><div class="row">
+<div><label>Капитал, ₽</label><input id="set_cap" inputmode="decimal"></div>
+<div><label>Риск на сделку, %</label><input id="set_rp" inputmode="decimal"></div>
+<div style="flex:0 0 auto"><button class="pri" onclick="saveSettings()">Сохранить</button></div></div></div>
+<div class="card"><b>Облачная синхронизация (GitHub Gist)</b>
+<div class="row"><div><label>Personal Access Token</label><input id="g_token" type="password" placeholder="ghp_…"></div></div>
+<div class="row"><div><label>Gist ID (после первого сохранения)</label><input id="g_id" placeholder="Например: abc123…"></div></div>
+<div class="row"><div style="flex:0 0 auto"><button onclick="gistSave()">Сохранить в облако</button></div><div style="flex:0 0 auto"><button onclick="gistLoad()">Загрузить из облака</button></div><div style="flex:0 0 auto"><button onclick="testConn()">Проверить соединение</button></div></div>
+<label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="g_auto" onchange="setGAuto(this.checked)"> Автозагрузка из облака при открытии файла</label>
+<div id="g_out" class="footer-note"></div></div>
+<div class="card"><b>Резервные копии</b>
+<div id="st_storage" style="display:none;color:#ff5252;font-size:12px;margin-bottom:6px"></div>
+<div class="row"><div style="flex:0 0 auto"><button onclick="expJSON()">Экспорт JSON</button></div><div style="flex:0 0 auto"><button onclick="document.getElementById('imp_f').click()">Импорт JSON</button></div></div>
+<input type="file" id="imp_f" accept=".json" style="display:none" onchange="impJSON(this)">
+<div id="set_out" class="footer-note"></div></div>
+</section>
+</main>
+<div class="modal-wrap" id="modal" style="display:none">
+<div class="modal"><h3>Новая операция</h3>
+<label>Счёт</label><select id="m_ac"></select>
+<label style="margin-top:8px">Тип</label><select id="m_type"><option value="buy">buy</option><option value="sell">sell</option></select>
+<label style="margin-top:8px">Тикер</label><input id="m_t" style="text-transform:uppercase" placeholder="SBER">
+<label style="margin-top:8px">Количество</label><input id="m_q" inputmode="decimal" placeholder="10"><div class="hint" id="m_hq">Укажите количество</div>
+<label style="margin-top:8px">Цена, ₽</label><input id="m_p" inputmode="decimal" placeholder="274,5"><div class="hint" id="m_hp">Укажите цену</div>
+<label style="margin-top:8px">Дата</label><input id="m_d" type="date">
+<label style="margin-top:8px">Комментарий</label><input id="m_note" placeholder="необязательно">
+<div style="display:flex;gap:8px;margin-top:14px"><button class="pri" onclick="saveOp()" style="flex:1">Сохранить</button><button onclick="closeOp()" style="flex:1">Отмена</button></div>
+</div></div>
+<div class="tip" id="tip"></div>
+<script>
+/* ==== BLOCK 1: ядро ==== */
+var showErr=function(t){var e=document.getElementById('errbar');if(!e){e=document.createElement('div');e.id='errbar';e.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#7a2020;color:#ffb0b0;padding:10px;font:13px sans-serif;z-index:9999';document.body.appendChild(e);e.onclick=function(){e.style.display='none'};}e.textContent=t+'  Нажмите, чтобы скрыть — и скопируйте текст в чат с Алисой';};
+window.onerror=function(m,s,l){showErr('[скрипт] '+m+' (строка '+(l||'?')+')');return false;};
+function safe(f){try{return f()}catch(e){showErr('['+(f&&f.name||'аноним')+'] '+e.message);}}
+var D={caps:100000,riskPct:2,accts:['Основной'],jrn:[],sectors:{},snaps:[],flows:[],learn:{done:{},ans:{}},cfg:{auto:0,tf:'D',topn:60,filt:'all',sort:'sig'}};
+var SCAN={busy:false,rows:[],uf:60,lastT:null};
+var SYM_KIND={};
+function isS(v){return typeof v==='string'}
+function isN(v){return typeof v==='number'&&isFinite(v)}
+function isA(v){return Object.prototype.toString.call(v)==='[object Array]'}
+function loadState(){try{var r=localStorage.getItem('iip_v3');if(!r)return;var d=JSON.parse(r);if(!d||typeof d!=='object')return;
+ if(d.caps!=null&&isFinite(+d.caps))D.caps=+d.caps;
+ if(d.riskPct!=null&&isFinite(+d.riskPct))D.riskPct=+d.riskPct;
+ if(isA(d.accts)&&d.accts.length&&d.accts.every(isS))D.accts=d.accts.slice();
+ if(isA(d.jrn))D.jrn=d.jrn.filter(function(t){return t&&isS(t.t)&&isS(t.type)&&isFinite(+t.qty)&&isFinite(+t.price)}).map(function(t){return{d:isS(t.d)?t.d:'',ac:isS(t.ac)?t.ac:'Основной',type:t.type==='sell'?'sell':'buy',t:t.t,q:+t.qty,p:+t.price,n:isS(t.n)?t.n:(isS(t.note)?t.note:'')}});
+ if(d.sectors&&typeof d.sectors==='object')D.sectors=d.sectors;
+ if(isA(d.snaps))D.snaps=d.snaps.filter(function(s){return s&&isS(s.d)&&isFinite(+s.v)});
+ if(isA(d.flows))D.flows=d.flows.filter(function(s){return s&&isS(s.d)&&(s.type==='in'||s.type==='out')&&isFinite(+s.v)}).map(function(s){return{d:s.d,type:s.type,v:+s.v}});
+ if(d.learn&&typeof d.learn==='object')D.learn=d.learn;
+ if(d.cfg&&typeof d.cfg==='object'){['auto','topn','sauto'].forEach(function(k){if(isFinite(+d.cfg[k]))D.cfg[k]=+d.cfg[k]});['tf','filt','sort','al','g_token','g_id'].forEach(function(k){if(isS(d.cfg[k]))D.cfg[k]=d.cfg[k]});if(d.cfg.g_auto===true)D.cfg.g_auto=true;else if(d.cfg.g_auto===false)D.cfg.g_auto=false
+}}catch(e){}}
+function saveState(){try{localStorage.setItem('iip_v3',JSON.stringify(D))}catch(e){}}
+function hardReset(){localStorage.removeItem('iip_v3');D.accts=['Основной'];D.jrn=[];D.sectors={};D.snaps=[];D.flows=[];D.learn={done:{},ans:{}};renderAll();toast('Данные стёрты')}
+function toast(t){var e=document.getElementById('tip');e.textContent=t;e.style.display='block';clearTimeout(window.__tt);window.__tt=setTimeout(function(){e.style.display='none'},2600)}
+/* ---- форматирование ---- */
+function fmN(v){if(!isFinite(v))return'—';var s=Math.abs(v)>=1000?Math.round(v).toString():(+v.toFixed(2)).toString();var parts=s.split('.');parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,' ');return(parts[0].charAt(0)==='-'?'−':'')+parts[0].replace('− ','−')+(parts[1]?'.'+parts[1]:'')}
+function fmM(v){return fmN(v)+' ₽'}
+function fmP(v){return(isFinite(v)?v:0).toFixed(1)+'%'}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function dStr(offDays){var d=new Date();d.setDate(d.getDate()+offDays);return d.toISOString().slice(0,10)}
+/* ---- ISS с запасными каналами ---- */
+var CHN=[{n:'прямой',u:''},{n:'allorigins',u:'https://api.allorigins.win/raw?url='},{n:'corsproxy',u:'https://corsproxy.io/?'}];
+var chnIdx=-1;
+function chnWrap(u){return CHN[chnIdx].u+encodeURIComponent(u)}
+function iss(path){var base='https://iss.moex.com/iss/'+path;
+ function tryCh(i){if(i>=CHN.length)return Promise.reject(new Error('все каналы недоступны'));chnIdx=i;
+  var url=CHN[i].u?chnWrap(base):base;
+  var ctl=typeof AbortController!=='undefined'?new AbortController():null;
+  var tm=ctl?setTimeout(function(){ctl.abort()},15000):null;
+  return fetch(url,{signal:ctl?ctl.signal:undefined}).then(function(r){if(tm)clearTimeout(tm);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).catch(function(e){if(tm)clearTimeout(tm);if(i+1<CHN.length)return tryCh(i+1);throw e})}
+ return tryCh(Math.max(0,chnIdx))}
+function badge(){var b=document.getElementById('ibadge');b.textContent='MOEX ISS: подключено ('+CHN[Math.max(0,chnIdx)].n+')';b.style.color=''}
+function connectMOEX(){iss('engines.json?iss.meta=off&iss.only=engines').then(function(){badge()}).catch(function(e){document.getElementById('ibadge').textContent='MOEX ISS: '+e.message;})}
+/* ---- FIFO и портфель ---- */
+function positions(){var m={};D.jrn.forEach(function(t){if(!m[t.t])m[t.t]={q:0,cost:0,t:t.t};var x=m[t.t];if(t.type==='buy'){x.q+=t.q;x.cost+=t.p*t.q}else{x.q-=t.q;x.cost-=t.p*t.q;if(x.cost<-1e-9)x.cost=0}});return Object.keys(m).map(function(k){var x=m[k];return{t:k,q:+x.q.toFixed(6),avg:x.q>0?x.cost/x.q:0,cost:x.cost}}).filter(function(x){return x.q>1e-6})}
+function invested(){return positions().reduce(function(a,p){return a+p.cost},0)}
+function portfolioVal(qm){return positions().reduce(function(a,p){var pr=qm&&qm[p.t]!=null?qm[p.t]:p.avg;return a+pr*p.q},0)}
+function pnlAll(qm){var v=portfolioVal(qm),i=invested();return{v:v,i:i,p:v-i,pp:i?(v/i-1)*100:0}}
+/* ---- рынок: кеш списка бумаг ---- */
+var UNIV={};
+function loadUniv(){return iss('engines/stock/markets/shares/boards/TQBR/securities.json?iss.meta=off&iss.only=securities,marketdata&limit=500').then(function(j){var sec=j&&j.securities&&j.securities.data||[],md=j&&j.marketdata&&j.marketdata.data||[];var sCols=j.securities.columns,mCols=j.marketdata.columns;var iS=sCols.indexOf('SECID'),iN=sCols.indexOf('SHORTNAME'),iP=sCols.indexOf('PREVPRICE'),iD=sCols.indexOf('DECIMALS');var mT=mCols.indexOf('SECID'),mL=mCols.indexOf('LAST'),mC=mCols.indexOf('LCLOSEPRC'),mO=mCols.indexOf('OPEN'),mV=mCols.indexOf('VALTODAY'),mQ=mCols.indexOf('LASTTOPREVPRICE');var map={};md.forEach(function(r){map[r[mT]]={last:r[mL],close:r[mC],open:r[mO],val:r[mV],chg:r[mQ]}});UNIV.shares=sec.map(function(r){var m=map[r[iS]]||{};var pr=m.last!=null?m.last:(m.close!=null?m.close:r[iP]);if(pr==null)pr=r[iP];return{t:r[iS],n:r[iN],p:pr,val:m.val||0,chg:m.chg}}).filter(function(x){return x.t&&x.p});sec.forEach(function(r){SYM_KIND[r[iS]]='shares'});return UNIV.shares})}
+function loadUnivBoard(board){var kind=board==='TQOB'?'bond_TQOB':'bond_TQCB';return iss('engines/stock/markets/bonds/boards/'+board+'/securities.json?iss.meta=off&iss.only=securities,marketdata&limit=1000').then(function(j){var sec=j&&j.securities&&j.securities.data||[],md=(j&&j.marketdata&&j.marketdata.data)||[];var c=j&&j.securities&&j.securities.columns||[],mC=j&&j.marketdata&&j.marketdata.columns||[];if(!c.length)return[];var iS=c.indexOf('SECID'),iN3=c.indexOf('SHORTNAME'),iF2=c.indexOf('FACEVALUE'),iP=c.indexOf('PREVPRICE'),iPL=c.indexOf('PREVWAPRICE');var mT=mC.indexOf('SECID'),mL=mC.indexOf('LAST'),mQ=mC.indexOf('LASTTOPREVPRICE');var map={};md.forEach(function(r){map[r[mT]]={l:r[mL],q:r[mQ]}});var res=sec.map(function(r){SYM_KIND[r[iS]]=kind;var m=map[r[iS]]||{};var pr=m.l!=null?m.l:(r[iPL]!=null?r[iPL]:r[iP]);if(pr!=null&&iF2>=0&&r[iF2]&&r[iF2]<100)pr=pr*r[iF2]/100;return{t:r[iS],n:r[iN3],p:pr,val:0,chg:m.q,isBond:true}}).filter(function(x){return x.t});return res}).catch(function(){return[]})}
+function loadUnivFunds(){var q='securities.json?iss.meta=off&iss.only=securities,marketdata&limit=500';function parse(j){var sec=j&&j.securities&&j.securities.data||[],md=(j&&j.marketdata&&j.marketdata.data)||[];var sC=j&&j.securities&&j.securities.columns||[],mC=j&&j.marketdata&&j.marketdata.columns||[];var iS=sC.indexOf('SECID'),iN2=sC.indexOf('SHORTNAME'),iP=sC.indexOf('PREVPRICE');var mT=mC.indexOf('SECID'),mL=mC.indexOf('LAST'),mQ=mC.indexOf('LASTTOPREVPRICE');var map={};md.forEach(function(r){map[r[mT]]={l:r[mL],q:r[mQ]}});return sec.map(function(r){var m=map[r[iS]]||{};SYM_KIND[r[iS]]='fund';return{t:r[iS],n:r[iN2],p:m.l!=null?m.l:r[iP],val:0,chg:m.q,isFund:true}}).filter(function(x){return x.t})}return iss('engines/stock/markets/shares/boards/TQTF/'+q).then(parse).catch(function(){return iss('engines/stock/markets/shares/boards/TQIF/'+q).then(parse)}).catch(function(){return[]})}
+function px(ticker){var pool=UNIV.shares||[];for(var i=0;i<pool.length;i++)if(pool[i].t===ticker)return pool[i].p;var s=LASTPX[ticker];return s?s:(positions().filter(function(x){return x.t===ticker})[0]||{avg:0}).avg}
+var LASTPX={};
+function rememberPx(list){(list||[]).forEach(function(x){if(x&&x.t&&isFinite(x.p))LASTPX[x.t]=x.p})}
+</script>
+<script>
+/* ==== BLOCK 2: графика, терминал, скринер, сканер ==== */
+function mns(c){var r=[];for(var i=0;i<c.length;i++)r.push(c[i].c);return r}
+function sma(a,n){var r=[],s=0;for(var i=0;i<a.length;i++){s+=a[i];if(i>=n)s-=a[i-n];r.push(i>=n-1?s/n:null)}return r}
+function rsi(a,n){n=n||14;var r=[],g=0,l=0;for(var i=1;i<a.length;i++){var d=a[i]-a[i-1];if(i<=n){g+=Math.max(d,0);l-=Math.min(d,0);if(i===n){g/=n;l/=n;r.push(null);r.push(l===0?100:100-100/(1+g/l))}}else{g=(g*(n-1)+Math.max(d,0))/n;l=(l*(n-1)+Math.max(-d,0))/n;r.push(l===0?100:100-100/(1+g/l))}}while(r.length<a.length)r.unshift(null);r=r.slice(0,a.length);return r}
+function ema(a,n){var k=2/(n+1),r=[],e=null;a.forEach(function(v,i){e=e==null?v:v*k+e*(1-k);r.push(e)});return r}
+function macd(a){var f=ema(a,12),s=ema(a,26);var m=f.map(function(v,i){return v-s[i]});var sg=ema(m,9);return{m:m,s:sg}}
+function atr(c,n){n=n||14;var tr=[],r=[];for(var i=1;i<c.length;i++){tr.push(Math.max(c[i].h-c[i].l,Math.abs(c[i].h-c[i-1].c),Math.abs(c[i].l-c[i-1].c)))}var s=0;for(var j=0;j<tr.length;j++){s+=tr[j];if(j>=n)s-=tr[j-n];r.push(j>=n-1?s/n:null)}r.unshift(null);return r}
+/* --- движок: оси, сетка, метки, кросс-курсор --- */
+function axisNice(mn,mx){if(!(mx>mn)){mx=mn+1}var sp=(mx-mn)/4;var mag=Math.pow(10,Math.floor(Math.log(sp)/Math.LN10));var st=mag*(sp/mag<1.5?1:sp/mag<3?2:sp/mag<7?5:10);mn=Math.floor(mn/st)*st;mx=Math.ceil(mx/st)*st;return{mn:mn,mx:mx,st:st}}
+function chartFrame(cv){var pad={l:56,r:64,t:12,b:30};var W=cv.width,H=cv.height;return{W:W,H:H,pad:pad,px:pad.l,py:pad.t,pw:W-pad.l-pad.r,ph:H-pad.t-pad.b}}
+function drawAxes(cv,f,vmin,vmax,fmt,xlab){var x=cv.getContext('2d');x.clearRect(0,0,f.W,f.H);x.font='11px monospace';x.strokeStyle='rgba(120,140,170,.16)';x.fillStyle='#7d8fa6';var v=vmin;while(v<=vmax+1e-9){var y=f.py+f.ph*(1-(v-vmin)/(vmax-vmin||1));x.beginPath();x.moveTo(f.px,y);x.lineTo(f.px+f.pw,y);x.stroke();x.fillText(fmt(v),4,y+4);v+=f.st}if(xlab&&xlab.length){xlab.forEach(function(p){x.fillText(p[0],f.px+f.pw*p[1]-14,f.H-8)})}}
+function lastBadge(cv,f,v,color){var x=cv.getContext('2d');var y=f.py+f.ph*(1-(v-vmin_g)/(vmax_g-vmin_g||1));if(y<f.py||y>f.py+f.ph)return;x.fillStyle=color;x.fillRect(f.px+f.pw,y-8,f.pad.r,16);x.fillStyle='#fff';x.fillText(String((+v).toFixed(2)),f.px+f.pw+4,y+4)}
+var vmin_g=0,vmax_g=1;
+function drawCandles(cv,cands,opt){opt=opt||{};if(!cands||!cands.length){var x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);x.fillStyle='#8b97a8';x.font='13px sans-serif';x.fillText('Нет данных',16,cv.height/2);return}
+var f=chartFrame(cv);var lo=Infinity,hi=-Infinity,mv=0;cands.forEach(function(c){lo=Math.min(lo,c.l);hi=Math.max(hi,c.h);mv=Math.max(mv,c.v||0)});
+var ax=axisNice(lo,hi);vmin_g=ax.mn;vmax_g=ax.mx;f.st=ax.st;
+var volH=f.ph*0.18,cH=f.ph-volH-6;
+var xlab=[];var step=Math.max(1,Math.floor(cands.length/5));for(var i=0;i<cands.length;i+=step)xlab.push([(cands[i].t||'').slice(5,10),i/(cands.length-1||1)]);
+drawAxes(cv,f,vmin_g,vmax_g,function(v){return String((+v).toFixed(2))},xlab);
+var x=cv.getContext('2d');var cw=f.pw/cands.length;var bw=Math.max(2,Math.min(cw*0.7,12));
+cands.forEach(function(c,i){var cx=f.px+cw*(i+0.5);var up=c.c>=c.o;var col=up?'#3fbf7f':'#e05555';
+ if(c.v){var vh=volH*(c.v/mv||0);x.fillStyle=up?'rgba(63,191,127,.35)':'rgba(224,85,85,.35)';x.fillRect(cx-bw/2,f.py+cH+6+volH-vh,bw,vh)}
+ var yo=f.py+cH*(1-(Math.max(c.o,c.c)-vmin_g)/(vmax_g-vmin_g));var yc=f.py+cH*(1-(Math.min(c.o,c.c)-vmin_g)/(vmax_g-vmin_g));
+ x.strokeStyle=col;x.beginPath();x.moveTo(cx,f.py+cH*(1-(c.h-vmin_g)/(vmax_g-vmin_g)));x.lineTo(cx,f.py+cH*(1-(c.l-vmin_g)/(vmax_g-vmin_g)));x.stroke();
+ x.fillStyle=col;x.fillRect(cx-bw/2,yo,bw,Math.max(1,yc-yo))});
+var last=cands[cands.length-1].c;var ly=f.py+cH*(1-(last-vmin_g)/(vmax_g-vmin_g));
+x.fillStyle='#4a9eff';x.fillRect(f.px+f.pw,ly-8,f.pad.r,16);x.fillStyle='#fff';x.fillText(last.toFixed(2),f.px+f.pw+4,ly+4);
+var mx=cands.reduce(function(a,c){return c.h>a.h?c:a},cands[0]);var mn2=cands.reduce(function(a,c){return c.l<a.l?c:a},cands[0]);
+x.fillStyle='#e0a340';x.font='10px monospace';x.fillText('max '+mx.h.toFixed(2),f.px+2,f.py+10);x.fillText('min '+mn2.l.toFixed(2),f.px+2,f.py+cH-2);
+attachCross(cv,cands,function(i){return cands[i].o.toFixed(2)+' H '+cands[i].h.toFixed(2)+' L '+cands[i].l.toFixed(2)+' C '+cands[i].c.toFixed(2)},f,cw)}
+function drawLineChart(cv,pts,fmt,color,area){if(!pts||pts.length<2){var x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);x.fillStyle='#8b97a8';x.font='13px sans-serif';x.fillText('Нет данных',16,cv.height/2);return}
+var f=chartFrame(cv);var ys=pts.map(function(p){return p[1]});var ax=axisNice(Math.min.apply(0,ys),Math.max.apply(0,ys));vmin_g=ax.mn;vmax_g=ax.mx;f.st=ax.st;
+var xlab=[];var step=Math.max(1,Math.floor(pts.length/5));for(var i=0;i<pts.length;i+=step)xlab.push([(pts[i][0]||'').slice(5,10),i/(pts.length-1||1)]);
+drawAxes(cv,f,vmin_g,vmax_g,fmt,xlab);
+var x=cv.getContext('2d');function X(i){return f.px+f.pw*i/(pts.length-1)}function Y(v){return f.py+f.ph*(1-(v-vmin_g)/(vmax_g-vmin_g))}
+if(area){x.beginPath();x.moveTo(X(0),Y(pts[0][1]));pts.forEach(function(p,i){x.lineTo(X(i),Y(p[1]))});x.lineTo(X(pts.length-1),f.py+f.ph);x.lineTo(X(0),f.py+f.ph);x.closePath();x.fillStyle='rgba(74,158,255,.12)';x.fill()}
+x.strokeStyle=color||'#4a9eff';x.lineWidth=2;x.beginPath();pts.forEach(function(p,i){i?x.lineTo(X(i),Y(p[1])):x.moveTo(X(i),Y(p[1]))});x.stroke();
+x.fillStyle=color||'#4a9eff';var lpt=pts[pts.length-1];x.fillRect(f.px+f.pw,Y(lpt[1])-8,f.pad.r,16);x.fillStyle='#fff';x.font='11px monospace';x.fillText(fmt(lpt[1]),f.px+f.pw+4,Y(lpt[1])+4)}
+function attachCross(cv,data,txt,f,cw){var tip=document.getElementById('tip');
+ function h(e){var r=cv.getBoundingClientRect();var cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;var i=Math.round((cx-f.px)/cw-0.5);i=Math.max(0,Math.min(data.length-1,i));tip.textContent=(data[i].t||'')+'  '+txt(i);tip.style.display='block';tip.style.left=Math.min(window.innerWidth-220,e.clientX+10)+'px';tip.style.top=(e.clientY-40)+'px'}
+ cv.onmousemove=function(e){if(data.length)h(e)};cv.ontouchmove=function(e){if(data.length){h(e);e.preventDefault()}};cv.ontouchend=cv.onmouseleave=function(){tip.style.display='none'}}
+function drawDonut(cv,parts,center){var x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);var tot=parts.reduce(function(a,p){return a+Math.max(0,p.v)},0);if(!tot){x.fillStyle='#8b97a8';x.font='13px sans-serif';x.fillText('Нет данных',16,cv.height/2);return}
+var cx=cv.width/2,cy=cv.height/2,r=Math.min(cv.width,cv.height)/2-30,a0=-Math.PI/2;var cols=['#4a9eff','#3fbf7f','#e0a340','#e05555','#9b6fe0','#40c4c4','#7f8fb0','#d060a0'];parts.forEach(function(p,i){var a1=a0+2*Math.PI*p.v/tot;x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,r,a0,a1);x.closePath();x.fillStyle=cols[i%8];x.fill();var am=(a0+a1)/2;if(p.v/tot>0.06){x.fillStyle='#fff';x.font='12px sans-serif';x.fillText(Math.round(p.v/tot*100)+'%',cx+Math.cos(am)*r*0.65,cy+Math.sin(am)*r*0.65)}a0=a1});
+x.fillStyle='#0d1117';x.beginPath();x.arc(cx,cy,r*0.55,0,7);x.fill();x.fillStyle='#dfe6f0';x.font='14px sans-serif';var t=center||fmM(tot);x.fillText(t,cx-x.measureText(t).width/2,cy+5)}
+function drawBars(cv,items,fmt){var x=cv.getContext('2d');x.clearRect(0,0,cv.width,cv.height);if(!items.length){x.fillStyle='#8b97a8';x.font='13px sans-serif';x.fillText('Нет данных',16,cv.height/2);return}
+var f=chartFrame(cv);var mx=0;items.forEach(function(it){mx=Math.max(mx,Math.abs(it.v))});var bw=Math.min(60,(f.pw/items.length)*0.6);var zero=f.py+f.ph/2;
+x.strokeStyle='rgba(120,140,170,.3)';x.beginPath();x.moveTo(f.px,zero);x.lineTo(f.px+f.pw,zero);x.stroke();x.font='11px monospace';
+items.forEach(function(it,i){var h=f.ph*0.42*(Math.abs(it.v)/mx||0);var cx=f.px+f.pw*(i+0.5)/items.length;x.fillStyle=it.v>=0?'#3fbf7f':'#e05555';x.fillRect(cx-bw/2,it.v>=0?zero-h:zero,bw,h);x.fillStyle='#dfe6f0';x.fillText(it.n.slice(5,10),cx-14,f.H-10);if(Math.abs(it.v)>1)x.fillText(fmN(it.v),cx-20,(it.v>=0?zero-h-4:zero+h+12))})}
+/* ---- история свечей ---- */
+var TF={D:{i:1,d:'день',days:250},W:{i:7,d:'неделя',days:800},H:{i:60,d:'час',days:90},M15:{i:15,d:'15 мин',days:30}};
+function hist(sym,tf){var c=TF[tf];var kind=SYM_KIND[sym]||'shares';var base='engines/stock/markets/shares/boards/TQBR';if(kind==='bond_TQOB')base='engines/stock/markets/bonds/boards/TQOB';else if(kind==='bond_TQCB')base='engines/stock/markets/bonds/boards/TQCB';else if(kind==='fund')base='engines/stock/markets/shares/boards/TQTF';return iss(base+'/securities/'+encodeURIComponent(sym)+'/candles.json?interval='+c.i+'&from='+dStr(-c.days)+'&iss.meta=off&iss.only=candles').then(function(j){var rows=(j&&j.candles&&j.candles.data)||[];return rows.map(function(r){return{o:r[0],c:r[1],h:r[2],l:r[3],v:r[4],t:r[6],e:r[7]}}).map(function(r){return{o:r.o,h:r.h,l:r.l,c:r.c,v:r.v,t:(r.t||'')}})})}
+/* ---- терминал ---- */
+var TERM={cands:[],sym:'',tf:'D'};
+function loadTerm(){return safe(function(){var sym=(document.getElementById('t_sym').value||'SBER').trim().toUpperCase();var tf=document.getElementById('t_tf').value;D.cfg.tf=tf;saveState();
+ document.getElementById('t_info').textContent='Загрузка '+sym+' ('+TF[tf].d+')…';
+ return hist(sym,tf).then(function(c){TERM.cands=c;TERM.sym=sym;TERM.tf=tf;drawTerm();document.getElementById('t_info').textContent=sym+': '+c.length+' свечей ('+TF[tf].d+'). Коснитесь графика — покажет дату и цены.';planFor(sym,tf,c)}).catch(function(e){document.getElementById('t_info').textContent='Не удалось загрузить: '+e.message})})}
+function drawTerm(){return safe(function(){var c=TERM.cands;if(!c.length)return;drawCandles(document.getElementById('t_chart'),c);
+var closes=mns(c);var r=rsi(closes,14);var m=macd(closes);var s20=sma(closes,20),s50=sma(closes,50);
+var rc=document.getElementById('ind_rsi');var rf=chartFrame(rc);var x=rc.getContext('2d');x.clearRect(0,0,rc.width,rc.height);drawAxes(rc,rf,0,100,function(v){return v.toFixed(0)},[]);
+x.strokeStyle='#4a9eff';x.beginPath();r.forEach(function(v,i){if(v==null)return;var px=rf.px+rf.pw*i/(r.length-1),py=rf.py+rf.ph*(1-v/100);i&&r[i-1]!=null?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();
+x.strokeStyle='rgba(224,163,64,.5)';[30,70].forEach(function(vv){var yy=rf.py+rf.ph*(1-vv/100);x.beginPath();x.moveTo(rf.px,yy);x.lineTo(rf.px+rf.pw,yy);x.stroke()});
+x.fillStyle='#7d8fa6';x.fillText('RSI(14)',4,rf.py+10);var lr=r.filter(function(v){return v!=null});if(lr.length){var lyv=rf.py+rf.ph*(1-lr[lr.length-1]/100);x.fillStyle='#4a9eff';x.fillRect(rf.px+rf.pw,lyv-8,rf.pad.r,16);x.fillStyle='#fff';x.fillText(lr[lr.length-1].toFixed(0),rf.px+rf.pw+4,lyv+4)}
+var mc=document.getElementById('ind_macd');var mf=chartFrame(mc);var xm=mc.getContext('2d');xm.clearRect(0,0,mc.width,mc.height);var allm=m.m.concat(m.s).filter(isFinite);var lo=Math.min.apply(0,allm),hi=Math.max.apply(0,allm);var ax=axisNice(lo,hi);mf.st=ax.st;drawAxes(mc,mf,ax.mn,ax.mx,function(v){return v.toFixed(1)},[]);
+xm.strokeStyle='#4a9eff';line(mc,mf,m.m);xm.strokeStyle='#e0a340';line(mc,mf,m.s);xm.fillStyle='#7d8fa6';xm.fillText('MACD (синяя — главная, золотая — сигнальная)',4,mf.py+12)});
+function line(cv,f,arr){var x=cv.getContext('2d');x.beginPath();var started=false;arr.forEach(function(v,i){if(!isFinite(v))return;var px=f.px+f.pw*i/(arr.length-1),py=f.py+f.ph*(1-(v-vmin_g)/(vmax_g-vmin_g));started?x.lineTo(px,py):x.moveTo(px,py);started=true});x.stroke()}}
+function planFor(sym,tf,c){return safe(function(){var closes=mns(c);var a=atr(c,14).filter(isFinite).pop();var p=closes[closes.length-1];if(!a)a=p*0.03;var rr=(document.getElementById('r_sl')?null:null);
+var rsiL=rsi(closes,14).filter(isFinite).pop();var dir=(sma(closes,20).filter(isFinite).pop()||0)>=(sma(closes,50).filter(isFinite).pop()||p)?'восходящий':'нисходящий';
+var risk=D.caps*D.riskPct/100;var stop=p-2*a,take=p+4*a;var qty=Math.max(0,Math.floor(risk/(2*a)));
+document.getElementById('t_plan').innerHTML=sym+' ('+TF[tf].d+'): цена '+p.toFixed(2)+' ₽, тренд '+dir+', RSI '+(rsiL?rsiL.toFixed(0):'—')+', ATR '+a.toFixed(2)+'.<br>Стоп ~ '+stop.toFixed(2)+' ₽ (−2 ATR), цель ~ '+take.toFixed(2)+' ₽ (+4 ATR). Объём при риске '+D.riskPct+'% ('+fmM(risk)+'): <b>'+qty+'</b> шт. <button onclick="openOp(\''+sym+'\')">В план</button>'})}
+/* ---- скринер ---- */
+var SC={list:[],cat:''};
+function scCat(c){return safe(function(){SC.cat=c;document.getElementById('sc_out').innerHTML='<div class="footer-note">Загрузка…</div>';
+ var pr;
+ if(c==='all')pr=Promise.all([loadUniv(),loadUnivBoard('TQOB'),loadUnivBoard('TQCB'),loadUnivFunds()]).then(function(ls){var seen={},out=[];ls.forEach(function(l){(l||[]).forEach(function(x){if(!seen[x.t]){seen[x.t]=1;out.push(x)}})});return out});else if(c==='shares')pr=loadUniv();else if(c==='ofz')pr=loadUnivBoard('TQOB');else if(c==='bonds')pr=loadUnivBoard('TQCB');else pr=loadUnivFunds();
+ pr.then(function(l){SC.list=l||[];rememberPx(SC.list);renderSc()}).catch(function(e){document.getElementById('sc_out').innerHTML='<div class="red">Биржа не вернула список ('+esc(e.message)+'). Попробуйте ещё раз.</div>'})})}
+function scSearch(){return safe(function(){var q=(document.getElementById('sc_q').value||'').trim().toUpperCase();if(!SC.list.length){scCat('shares');setTimeout(scSearch,1200);return}renderSc(q)})}
+function renderSc(q){return safe(function(){var l=SC.list.filter(function(x){return!q||(x.t+' '+x.n).toUpperCase().indexOf(q)>=0});var total=l.length;l=l.slice(0,120);function kindOf(x){return x.isFund?'фонд':x.isBond?(x.t&&x.t.indexOf('SU')===0&&/^SU\d{5}/.test(x.t)?'ОФЗ':'облигация'):'акция'}var body=l.map(function(x){var chg=x.chg!=null?'<span class="'+(x.chg>=0?'grn':'red')+'">'+fmP(x.chg)+'</span>':'—';return'<tr><td><b>'+esc(x.t)+'</b></td><td>'+esc(kindOf(x))+'</td><td>'+esc(x.n)+'</td><td class="r">'+(isFinite(x.p)?x.p.toFixed(2):'—')+'</td><td class="r">'+chg+'</td></tr>'}).join('');document.getElementById('sc_out').innerHTML=l.length?('<div class="footer-note" style="margin-bottom:6px">Показано '+l.length+' из '+total+' бумаг</div><table><tr><th>Тикер</th><th>Тип</th><th>Название</th><th class="r">Цена</th><th class="r">Изм.%</th></tr>'+body+'</table>'):'<div class="footer-note">Ничего не найдено</div>'})}
+function strength(r){var s=0,w=[];var rsi=r.rsi!=null?r.rsi:50;if(rsi<30){s+=2;w.push('RSI '+rsi.toFixed(0)+' — перепроданность')}else if(rsi>70){s-=2;w.push('RSI '+rsi.toFixed(0)+' — перекупленность')}
+if(r.macdUp){s+=1;w.push('MACD выше сигнальной')}else{s-=1;w.push('MACD ниже сигнальной')}
+if(r.trend>0){s+=1;w.push('цена выше SMA20/50')}else if(r.trend<0){s-=1;w.push('цена ниже SMA20/50')}
+if(r.imp>3){s+=1;w.push('импульс +'+r.imp.toFixed(1)+'% за 20 свечей')}else if(r.imp<-3){s-=1;w.push('импульс '+r.imp.toFixed(1)+'% за 20 свечей')}
+return{s:Math.max(-3,Math.min(3,s)),w:w}}
+function verdictOf(s){return s>=2?'покупка':s<=-2?'продажа':'нейтрально'}
+function scanRun(){if(SCAN.busy)return;SCAN.busy=true;SCAN.lastT=new Date();var __sl=document.getElementById('s_last');if(__sl)__sl.textContent='скан в '+SCAN.lastT.toLocaleTimeString('ru-RU');var btns=document.querySelectorAll('#sec-scanner button');btns.forEach&&btns.forEach(function(b){b.disabled=true});
+ document.getElementById('s_status').textContent='Загрузка списка бумаг…';
+ return loadUniv().then(function(list){var topn=+document.getElementById('s_top').value||60;SCAN.uf=topn;list=list.slice().sort(function(a,b){return(b.val||0)-(a.val||0)}).slice(0,topn);
+  document.getElementById('s_status').textContent='Список получен: '+list.length+' бумаг. Считаю индикаторы по топ-30 (это '+(30*4)+' запросов, займёт до минуты)…';
+  var tf=document.getElementById('s_tf').value;D.cfg.tf=tf;saveState();
+  var seq=Promise.resolve(),rows=[];var top=list.slice(0,30);
+  top.forEach(function(x){seq=seq.then(function(){return hist(x.t,tf).then(function(c){if(c.length<20){rows.push({t:x.t,n:x.n,p:x.p,chg:x.chg,skip:1});return}
+   var closes=mns(c);var rL=rsi(closes,14).filter(isFinite).pop();var m=macd(closes);var mup=m.m.length&&m.s.length&&m.m[m.m.length-1]>m.s[m.s.length-1];
+   var s20=sma(closes,20).filter(isFinite).pop(),s50=sma(closes,50).filter(isFinite).pop();var tr=(s20!=null&&s50!=null)?(closes[closes.length-1]>s20&&s20>s50?1:(closes[closes.length-1]<s20&&s20<s50?-1:0)):0;
+   var imp=closes.length>20?(closes[closes.length-1]/closes[closes.length-21]-1)*100:0;
+   var r={t:x.t,n:x.n,p:x.p,chg:x.chg,rsi:rL,macdUp:mup,trend:tr,imp:imp};var st=strength(r);r.s=st.s;r.w=st.w;r.v=verdictOf(st.s);rows.push(r)}).catch(function(){rows.push({t:x.t,n:x.n,p:x.p,chg:x.chg,skip:1})})})});
+  return seq.then(function(){var f=document.getElementById('s_filt').value;if(f==='buy')rows=rows.filter(function(r){return r.v==='покупка'});if(f==='sell')rows=rows.filter(function(r){return r.v==='продажа'});if(f==='neu')rows=rows.filter(function(r){return r.v==='нейтрально'});
+   var s=document.getElementById('s_sort').value;rows.sort(function(a,b){if(s==='chg')return(b.chg||0)-(a.chg||0);if(s==='rsi')return((a.rsi==null?50:a.rsi)-(b.rsi==null?50:b.rsi));return(b.s||0)-(a.s||0)});
+   SCAN.rows=rows;renderScan();renderSigField();renderExitPanel();SCAN.busy=false;if(btns.forEach)btns.forEach(function(b){b.disabled=false})})}).catch(function(e){SCAN.busy=false;document.getElementById('s_status').textContent='Ошибка сканирования: '+e.message;if(btns.forEach)btns.forEach(function(b){b.disabled=false})})}
+function renderScan(){return safe(function(){var el=document.getElementById('s_out');document.getElementById('s_scanCard').style.display='';
+var head='<tr><th>Тикер</th><th class="r">Цена</th><th class="r">День</th><th class="r">RSI</th><th>MACD</th><th>Тренд</th><th class="r">Импульс</th><th>Сигнал</th><th>Обоснование</th></tr>';
+el.innerHTML=head+SCAN.rows.slice(0,60).map(function(r){var chg=r.chg!=null?'<span class="'+(r.chg>=0?'grn':'red')+'">'+fmP(r.chg)+'</span>':'—';
+return'<tr><td><b>'+esc(r.t)+'</b></td><td class="r">'+(r.p?r.p.toFixed(2):'—')+'</td><td class="r">'+chg+'</td><td class="r">'+(r.rsi!=null?r.rsi.toFixed(0):'—')+'</td><td>'+(r.macdUp?'<span class="grn">▲</span>':'<span class="red">▼</span>')+'</td><td>'+(r.trend>0?'рост':r.trend<0?'спад':'бок')+'</td><td class="r">'+(r.imp!=null?fmP(r.imp):'—')+'</td><td><span class="badge2 '+(r.v==='покупка'?'grn':r.v==='продажа'?'red':'dim')+'">'+(r.skip?'мало данных':r.v)+'</span></td><td style="white-space:normal;min-width:180px">'+(r.w||[]).join('; ')+'</td></tr>'}).join('')})}
+function renderSigField(){return safe(function(){var best=SCAN.rows.filter(function(r){return!r.skip})[0];var el=document.getElementById('s_sig');
+if(!best){el.innerHTML='<div class="footer-note">Сильных сигналов нет — рынок в равновесии.</div>';return}
+var risk=D.caps*D.riskPct/100;var qty=Math.max(0,Math.floor(risk/(best.p*0.04||1)));
+el.innerHTML='<div class="card" style="margin-bottom:0"><b>'+esc(best.t)+'</b> — '+best.v+' (сила '+(best.s>0?'+':'')+best.s+'/3)<br>Цена '+best.p.toFixed(2)+' ₽ · RSI '+(best.rsi!=null?best.rsi.toFixed(0):'—')+' · обоснование: '+best.w.join('; ')+'.<br>Объём при риске '+D.riskPct+'%: <b>'+qty+'</b> шт. <button onclick="openOp(\''+best.t+'\')">В план</button> <button onclick="ufSym(\''+best.t+'\')">Свод по ТФ</button></div>';
+D.scanSig={t:best.t,v:best.v};renderOvSig()})}
+function ufSym(t){return safe(function(){document.getElementById('uf_sym').value=t;tfDigest()})}
+function tfDigest(){return safe(function(){var sym=(document.getElementById('uf_sym').value||'').trim().toUpperCase();if(!sym){document.getElementById('s_uf').textContent='Введите тикер';return}
+var el=document.getElementById('s_uf');el.textContent='Считаю по 4 таймфреймам…';var out=[];var seq=Promise.resolve();
+['W','D','H','M15'].forEach(function(tf){seq=seq.then(function(){return hist(sym,tf).then(function(c){if(c.length<20){out.push({tf:tf,skip:1});return}
+ var closes=mns(c);var rL=rsi(closes,14).filter(isFinite).pop();var m=macd(closes);var mup=m.m[m.m.length-1]>m.s[m.s.length-1];var s20=sma(closes,20).filter(isFinite).pop(),s50=sma(closes,50).filter(isFinite).pop();
+ var tr=(s20!=null&&s50!=null)?(closes[closes.length-1]>s20&&s20>s50?1:(closes[closes.length-1]<s20&&s20<s50?-1:0)):0;var imp=closes.length>20?(closes[closes.length-1]/closes[closes.length-21]-1)*100:0;
+ var r={rsi:rL,macdUp:mup,trend:tr,imp:imp};var st=strength(r);out.push({tf:tf,s:st.s,v:verdictOf(st.s),w:st.w})}).catch(function(){out.push({tf:tf,skip:1})})})});
+seq.then(function(){var names={W:'недельный',D:'дневной',H:'часовой',M15:'15 минут'};
+var buys=out.filter(function(o){return o.v==='покупка'}).length,sells=out.filter(function(o){return o.v==='продажа'}).length;
+var concl=buys>=3?'совпадение на большинстве ТФ — идея усилена':sells>=3?'совпадение на большинстве ТФ — идея усилена вниз':'таймфреймы противоречат — уменьшите объём или пропустите';
+el.innerHTML='<table><tr><th>ТФ</th><th>Вердикт</th><th>Обоснование</th></tr>'+out.map(function(o){return'<tr><td>'+names[o.tf]+'</td><td>'+(o.skip?'мало данных':'<span class="badge2 '+(o.v==='покупка'?'grn':o.v==='продажа'?'red':'dim')+'">'+o.v+'</span> ('+(o.s>0?'+':'')+o.s+')</td><td style="white-space:normal">'+(o.w||[]).join('; ')+'</td>')}).join('')+'</table><div class="footer-note"><b>Итог: </b>'+concl+'</div>'})})}
+function renderExitPanel(){return safe(function(){var el=document.getElementById('s_exit');var ps=positions();if(!ps.length){el.textContent='Позиций нет — вносите сделки через «Портфель».';return}
+el.innerHTML='<div class="footer-note">Считаю по дневным свечам…</div>';var seq=Promise.resolve(),rows=[];
+ps.forEach(function(p){seq=seq.then(function(){return hist(p.t,'D').then(function(c){if(c.length<20){rows.push({t:p.t});return}
+var closes=mns(c);var a=atr(c,14).filter(isFinite).pop()||closes[closes.length-1]*0.03;var pr=closes[closes.length-1];var pnl=(pr-p.avg)/p.avg*100;
+var last=LASTPX[p.t]||pr;if(isFinite(last)&&last>0)pr=last;
+var act=pnl>=20?'фиксируйте частично (трейлинг-стоп)':pnl<=-10?'стоп-лосс достигнут — решение о выходе':'держать, стоп '+fmN(p.avg-2*a);
+rows.push({t:p.t,q:p.q,avg:p.avg,pr:pr,pnl:pnl,act:act})}).catch(function(){rows.push({t:p.t})})})});
+seq.then(function(){el.innerHTML='<table><tr><th>Тикер</th><th class="r">Кол-во</th><th class="r">Средняя</th><th class="r">Цена</th><th class="r">P/L</th><th>Рекомендация</th></tr>'+rows.map(function(r){return'<tr><td><b>'+esc(r.t)+'</b></td><td class="r">'+(r.q!=null?r.q:'—')+'</td><td class="r">'+(r.avg?r.avg.toFixed(2):'—')+'</td><td class="r">'+(r.pr!=null?r.pr.toFixed(2):'—')+'</td><td class="r '+(r.pnl>=0?'grn':'red')+'">'+(r.pnl!=null?fmP(r.pnl):'—')+'</td><td style="white-space:normal">'+(r.act||'нет данных')+'</td></tr>'}).join('')+'</div>'})})}
+</script>
+<script>
+/* ==== BLOCK 3: бэктест, аллокация, риск, стратегии, мост, настройки, запуск ==== */
+/* ---- бэктест ---- */
+function runBT(){return safe(function(){var sym=(document.getElementById('bt_sym').value||'SBER').trim().toUpperCase();var st=document.getElementById('bt_str').value;
+document.getElementById('bt_out').textContent='Загрузка дневных свечей '+sym+'…';
+return hist(sym,'D').then(function(c){if(c.length<60){document.getElementById('bt_out').textContent='Слишком мало данных для бэктеста';return}
+var closes=mns(c);var q=10000,cash=q,sh=0,eq=[],trades=0,wins=0,entry=0;var s20=sma(closes,20),s50=sma(closes,50),r14=rsi(closes,14);
+var hi20=closes[0];
+for(var i=1;i<closes.length;i++){hi20=Math.max(hi20,closes[i-1]);if(i>20)hi20=Math.max.apply(0,closes.slice(Math.max(0,i-21),i));
+ var sig=0;
+ if(st==='sma'&&s20[i]&&s50[i]){sig=(s20[i]>s50[i])?1:(s20[i]<s50[i]?-1:0)}
+ if(st==='rsi'&&r14[i]!=null){sig=r14[i]<30?1:(r14[i]>55?-1:0)}
+ if(st==='brk'){sig=closes[i]>hi20?1:(closes[i]<closes[i-1]*0.97?-1:0)}
+ if(sig>0&&sh===0){sh=cash/closes[i];entry=closes[i];cash=0;trades++}
+ if(sig<0&&sh>0){var ret=closes[i]/entry-1;if(ret>0)wins++;cash=sh*closes[i];sh=0}
+ eq.push([c[i].t,cash+sh*closes[i]])}
+var fin=cash+sh*closes[closes.length-1];if(sh>0){trades++;if(closes[closes.length-1]>entry)wins++}
+var retAll=fin/q*100-100;var peak=q,mdd=0;eq.forEach(function(e){peak=Math.max(peak,e[1]);mdd=Math.max(mdd,(peak-e[1])/peak*100)});
+document.getElementById('bt_out').innerHTML='<b>'+sym+'</b> — стратегия: '+({sma:'SMA 20/50',rsi:'RSI разворот',brk:'пробой 20 дней'})[st]+'<br>Итог: '+fmM(fin)+' ('+fmP(retAll)+') · сделок: '+trades+' · побед: '+(trades?Math.round(wins/trades*100):0)+'% · макс. просадка: '+fmP(mdd)+'<br><span class="dim">Результат исторический, не гарантия будущего.</span>';
+drawLineChart(document.getElementById('bt_chart'),eq,function(v){return fmN(v)},'#3fbf7f',true)}).catch(function(e){document.getElementById('bt_out').textContent='Ошибка: '+e.message})})}
+/* ---- аллокация ---- */
+var AL=[
+{id:'6040',n:'Классическая 60/40',w:{st:60,bd:40,gd:0,cs:0},d:'Золотой стандарт умеренного риска: 60% акции, 40% облигации. Подходит большинству при горизонте от 5 лет.'},
+{id:'7030',n:'Сбалансированная 70/30',w:{st:70,bd:30,gd:0,cs:0},d:'Чуть агрессивнее 60/40 — для длинного горизонта и спокойной реакции на просадки.'},
+{id:'9010',n:'Агрессивная 90/10',w:{st:90,bd:10,gd:0,cs:0},d:'Почти всё в акциях. Только если горизонт 10+ лет и просадки −40% не пугают.'},
+{id:'cons',n:'Консервативная 20/70/10',w:{st:20,bd:70,gd:10,cs:0},d:'Капитал понадобится в ближайшие 1–2 года — основной упор на облигации.'},
+{id:'pp',n:'Постоянный портфель (25×4)',w:{st:25,bd:25,gd:25,cs:25},d:'Идея Гарри Брауна: поровну акции, облигации, золото, деньги. Устойчив к любому сценарию.'},
+{id:'aw',n:'Всепогодная (упрощённая)',w:{st:30,bd:55,gd:15,cs:0},d:'Идея Рэя Далио в упрощении: много облигаций, золото как страховка.'},
+{id:'div',n:'Дивидендная 80/20',w:{st:80,bd:20,gd:0,cs:0},d:'Ставка на денежный поток: дивидендные акции плюс подушка из облигаций.'},
+{id:'lazy',n:'Ленивый портфель (3 фонда)',w:{st:60,bd:30,gd:0,cs:10},d:'Минимум усилий: фонд акций (TMOS/SBMX) + фонд облигаций (SBGB) + кэш-фонд (LQDT).'},
+{id:'cash',n:'Купонная 10/80/10',w:{st:10,bd:80,gd:0,cs:10},d:'Живём на купоны и проценты: почти всё в облигациях и ликвидности.'},
+{id:'eq',n:'100% акции',w:{st:100,bd:0,gd:0,cs:0},d:'Максимум роста и максимум волатильности. Только для опытных и терпеливых.'}];
+function fillAlSelect(){var s=document.getElementById('al_str');s.innerHTML=AL.map(function(a){return'<option value="'+a.id+'">'+a.n+'</option>'}).join('')}
+function classify(t){var u=t.toUpperCase();if(/^(OFZ|SU)/.test(u))return'bd';if(/LQDT/.test(u))return'cs';if(/TGLD|GLDR/.test(u))return'gd';if(/^(TMOS|SBMX|AKME|AKMB|EQMX|LQDT|SBGB|SBRB|AKME)/.test(u))return u.indexOf('SBGB')>=0?'bd':'st';
+var sec=(D.sectors[u]||'').toLowerCase();if(/гос|ofz|облиг|bond/.test(sec))return'bd';return'st'}
+function renderAlloc(){return safe(function(){var id=document.getElementById('al_str').value||'6040';D.cfg.al=id;saveState();var a=AL.filter(function(x){return x.id===id})[0]||AL[0];
+document.getElementById('al_desc').innerHTML='<b>'+esc(a.n)+'</b>: '+esc(a.d)+' · цель: акции '+a.w.st+'% · облигации '+a.w.bd+'% · золото '+a.w.gd+'% · деньги '+a.w.cs+'%';
+var ps=positions();var val=portfolioVal();if(val<=0)val=1;
+var cls={st:0,bd:0,gd:0,cs:0};ps.forEach(function(p){var pv=px(p.t);var v=(isFinite(pv)&&pv>0?pv:p.avg)*p.q;cls[classify(p.t)]+=v});
+var names={st:'Акции',bd:'Облигации',gd:'Золото',cs:'Деньги'};
+document.getElementById('al_tbl').innerHTML='<table><tr><th>Класс</th><th class="r">Сейчас</th><th class="r">Цель</th><th class="r">Разница</th><th>Действие</th></tr>'+
+['st','bd','gd','cs'].map(function(k){var now=cls[k]/val*100,tgt=a.w[k],d=tgt-now;var act;
+if(!ps.length)act='внесите сделки через «Портфель»';
+else if(d>5)act='докупать на ~'+fmM(val*d/100);else if(d<-5)act='сокращать на ~'+fmM(val*-d/100);else act='в норме';
+return'<tr><td>'+names[k]+'</td><td class="r">'+now.toFixed(1)+'%</td><td class="r">'+tgt+'%</td><td class="r '+(Math.abs(d)<=5?'dim':d>0?'red':'grn')+'">'+(d>0?'+':'')+d.toFixed(1)+' п.п.</td><td style="white-space:normal">'+act+'</td></tr>'}).join('')+'</table>';
+var pts=[['Акции',cls.st],['Облигации',cls.bd],['Золото',cls.gd],['Деньги',cls.cs]].filter(function(p){return p[1]>0});
+drawDonut(document.getElementById('al_cmp'),pts.length?pts:[['Акции',1]],fmM(portfolioVal()));
+document.getElementById('al_rules').innerHTML='1. Ребалансировка — раз в квартал или при отклонении 5+ п.п.<br>2. Пополнения направляйте в отстающий класс, а не в растущий — так не рождаются «вложения в верхушку».<br>3. При просадке акций на 20%+ не сокращайте акционную долю — это момент покупки по правилу ребалансировки.<br>4. Дивиденды и купоны реинвестируйте в недовес.<br>5. Доля одной бумаги — не более 10–15% портфеля.'})}
+var QT=[
+{q:'Как отреагируете на просадку портфеля на −20%?',o:['Докупаю — это возможность','Терплю, ничего не делаю','Пора продавать, слишком тревожно'],s:[3,2,1]},
+{q:'Когда понадобится капитал?',o:['Через 10 лет и позже','Через 3–7 лет','Через 1–2 года'],s:[3,2,1]},
+{q:'Ваш опыт инвестиций',o:['Более 3 лет, помню кризисы','1–3 года','Меньше года'],s:[3,2,1]},
+{q:'Главная цель',o:['Максимальный рост капитала','Умеренный рост и доход','Сохранить и подзаработать'],s:[3,2,1]}];
+function renderTest(){return safe(function(){document.getElementById('al_test').innerHTML=QT.map(function(q,i){return'<div style="margin-bottom:8px"><b>'+(i+1)+'. '+esc(q.q)+'</b><br>'+q.o.map(function(o,j){return'<label style="display:block;margin:2px 0"><input type="radio" name="qt'+i+'" value="'+j+'" onchange="scoreTest()"> '+esc(o)+'</label>'}).join('')+'</div>'}).join('')})}
+function scoreTest(){return safe(function(){var sum=0,full=true;QT.forEach(function(q,i){var v=document.querySelector('input[name=qt'+i+']:checked');if(!v){full=false;return}sum+=q.s[+v.value]});
+if(full){var id=sum<=5?'cons':sum<=8?'6040':sum<=10?'7030':'9010';document.getElementById('al_str').value=id;renderAlloc();toast('Ваш профиль: '+(sum<=5?'консервативный':sum<=8?'умеренный':sum<=10?'сбалансированный':'агрессивный')+'. Стратегия подставлена.')}})}
+/* ---- риск ---- */
+function calcRisk(){return safe(function(){var cap=+document.getElementById('r_cap').value||D.caps;var rp=+document.getElementById('r_rp').value||D.riskPct;var p=+document.getElementById('r_px').value;var sl=+document.getElementById('r_sl').value;
+if(!(p>0&&sl>0&&sl<p)){document.getElementById('r_out').innerHTML='<div class="red">Цена входа и стоп должны быть положительными, стоп ниже входа.</div>';return}
+var per=p-sl,qty=Math.floor(cap*rp/100/per);document.getElementById('r_out').innerHTML='Риск на сделку: '+fmM(cap*rp/100)+' ('+rp+'% от '+fmN(cap)+').<br>Риск на акцию: '+per.toFixed(2)+' ₽.<br><b>Объём позиции: '+qty+' шт. на '+fmM(qty*p)+'</b><br><span class="dim">Если стоп сработает — потеряете ровно '+fmM(cap*rp/100)+'.</span>'})}
+/* ---- стратегии и обучение ---- */
+var STRATS=[
+{n:'Пересечение SMA 20/50',d:'Покупка, когда быстрая средняя пересекает медленную снизу вверх; продажа — наоборот.'},
+{n:'Дивергенция RSI',d:'Цена делает новый минимум, а RSI нет — признак разворота вверх. Работает на таймфреймах от дневного.'},
+{n:'Пробой SMA',d:'Цена пробивает SMA сверху вниз с объёмом — сигнал шорта; обратно — лонга.'},
+{n:'Тренд по SMA50',d:'Держать позицию, пока цена выше SMA50; выход при закрытии ниже.'},
+{n:'MACD-разворот',d:'Главная MACD пересекает сигнальную — направление смены импульса.'},
+{n:'Свинг с ATR',d:'Вход на откате, стоп −2 ATR, цель +4 ATR — соотношение 2:1.'},
+{n:'Лесенка усреднения',d:'Докупать равными частями на просадках по заранее составленному плану, не на эмоциях.'},
+{n:'Дивидендный календарь',d:'Покупка перед отсечкой и возврат после дивидендного гэпа при сильной бумаге.'},
+{n:'Пирамида прибыли',d:'Добавление к позиции по мере роста на каждом новом экстремуме с перестановкой стопа.'},
+{n:'Разворотные свечи',d:'Молот, поглощение, падающая звезда на ключевых уровнях с подтверждением объёмом.'},
+{n:'Пробой диапазона',d:'Вход на пробое максимума N дней; ложный вынос — отмена, стоп под уровнем.'},
+{n:'Скользящий стоп (трейлинг)',d:'Стоп следует за ценой на дистанции 2–3 ATR; фиксация только по рынку, не по эмоциям.'},
+{n:'Сезонность',d:'Открытие позиций в слабые месяцы (сентябрь-октябрь), фиксация в сильные (декабрь-апрель).'},
+{n:'Ребалансировка',d:'Регулярный возврат долей к целевым: продажа выросшего, докупка отставшего.'},
+{n:'Хедж объёмом',d:'Сокращать экспозицию при росте волатильности (широкие свечи, всплески объёма), наращивать при затишье.'}];
+function renderStrat(){return safe(function(){var q=(document.getElementById('st_q').value||'').toLowerCase();var l=STRATS.filter(function(s){return!q||(s.n+' '+s.d).toLowerCase().indexOf(q)>=0});
+document.getElementById('st_out').innerHTML=l.length?l.map(function(s){return'<div class="card" style="margin-bottom:8px"><b>'+esc(s.n)+'</b><div class="footer-note">'+esc(s.d)+'</div></div>'}).join(''):'<div class="footer-note">Ничего не найдено</div>'})}
+var LESSONS=[
+{n:'1. Зачем портфель, а не одна бумага',t:'Диверсификация — единственная бесплатная страховка. Одна бумага может упасть на 90% и не вернуться; портфель из классов активов возвращается исторически почти всегда. Начните с аллокации — доли акции/облигации определяют 80% результата.'},
+{n:'2. Что такое риск-менеджмент',t:'Риск на сделку — доля капитала, которую вы готовы потерять. Правило: 1–2% на сделку. Объём = капитал × риск% ÷ расстояние до стопа. Считайте до покупки, а не после.'},
+{n:'3. Стоп-лосс и цели',t:'Стоп ставится по структуре рынка (за локальный минимум, −2 ATR), а не «на круглой цифре». Цель минимум в 2 раза дальше стопа — тогда достаточно выигрывать в 40% случаев.'},
+{n:'4. FIFO и налоги',t:'Продавая бумагу, вы закрываете позиции по FIFO — первым пришёл, первым ушёл. Терминал считает это автоматически. ЛДВ: владение бумагой более 3 лет освобождает до 3 млн ₽ за каждый год от НДФЛ.'},
+{n:'5. Индикаторы: RSI и MACD',t:'RSI выше 70 — перекупленность, ниже 30 — перепроданность; но в сильном тренде RSI может неделями держаться у 70. MACD показывает смену импульса. Индикаторы подтверждают решение, а не заменяют его.'},
+{n:'6. Ребалансировка',t:'Доли классов дрейфуют: выросшие акции увеличивают риск без вашего ведома. Ребаланс — возврат к цели: раз в квартал или при отклонении 5+ п.п. Психологически это «продай высокое, купи низкое» на автопилоте.'},
+{n:'7. Психология',t:'Главная битва — не с рынком, а с собой. FOMO заставляет покупать вершины, паника — продавать дно. Пропишите правила заранее (в «Стратегиях» и плане сделки) и следуйте им, а не настроению.'},
+{n:'8. План на просадку',t:'Просадки −20–30% — норма для рынка акций. Реакция по плану: проверить, не изменился ли тезис; если нет — докупать по ребалансу; если да — сокращать. Никогда не выходить из рынка целиком из страха.'}];
+var QUIZ=[['Что делать при просадке −20% без изменения тезиса?',['Продавать всё','Докупать по ребалансу','Паниковать'],1],
+['Сколько капитала рисковать на сделку?',['20%','1–2%','Всё'],1],
+['По какой логике закрываются позиции при продаже?',['LIFO','FIFO','Случайно'],1],
+['RSI ниже 30 — это',['Гарантия роста','Признак перепроданности','Причина продать'],1]];
+function renderEduReal(){return safe(function(){var el=document.getElementById('edu_out');
+el.innerHTML=LESSONS.map(function(L,i){var done=D.learn.done&&D.learn.done[i];var q=QUIZ[i];
+var html='<div class="card"><b>'+esc(L.n)+'</b>'+(done?' <span class="badge2 grn">пройден</span>':'')+'<div class="footer-note" style="margin:6px 0">'+esc(L.t)+'</div>';
+if(q&&!done){html+='<b style="font-size:13px">'+esc(q[0])+'</b><br>'+q[1].map(function(o,j){return'<label style="display:block"><input type="radio" name="lq'+i+'" value="'+j+'" onchange="answerX('+i+','+j+')"> '+esc(o)+'</label>'}).join('')}
+return html+'</div>'}).join('')})}
+function answerX(i,j){return safe(function(){var ok=QUIZ[i][2]===j;D.learn.ans[i]=j;if(ok)D.learn.done[i]=true;saveState();renderEduReal();toast(ok?'Верно! Урок пройден.':'Не так. Перечитайте урок и попробуйте снова.')})}
+function strTab(t){return safe(function(){document.getElementById('st_ref').style.display=t==='ref'?'':'none';document.getElementById('st_edu').style.display=t==='edu'?'':'none';document.getElementById('stb_ref').classList.toggle('on',t==='ref');document.getElementById('stb_edu').classList.toggle('on',t==='edu')})}
+/* ---- мост ---- */
+var BR={buf:[]};
+function brParse(){return safe(function(){var txt=document.getElementById('br_txt').value||'';BR.buf=[];
+txt.split('\n').forEach(function(line){line=line.trim();if(!line)return;var m=line.match(/([A-Z0-9-]{3,12})\s+(\d+(?:[.,]\d+)?)\s+(?:по\s+)?(\d+(?:[.,]\d+)?)/i);
+if(!m)return;var dm=line.match(/(\d{4}-\d{2}-\d{2})/);BR.buf.push({t:m[1].toUpperCase(),q:parseFloat(m[2].replace(',','.')),p:parseFloat(m[3].replace(',','.')),d:dm?dm[1]:dStr(0)})});
+renderBr();toast('Найдено строк: '+BR.buf.length)})}
+function renderBr(){return safe(function(){var sel=document.getElementById('br_sel');sel.innerHTML=D.accts.map(function(a){return'<option>'+esc(a)+'</option>'}).join('');
+document.getElementById('br_out').innerHTML=BR.buf.length?'<table><tr><th>Тикер</th><th class="r">Кол-во</th><th class="r">Цена</th><th>Дата</th><th>Счёт</th><th></th></tr>'+BR.buf.map(function(b,i){return'<tr><td>'+esc(b.t)+'</td><td class="r">'+b.q+'</td><td class="r">'+b.p+'</td><td>'+b.d+'</td><td><select onchange="BR.buf['+i+'].ac=this.value">'+D.accts.map(function(a){return'<option'+(b.ac===a?' selected':'')+'>'+esc(a)+'</option>'}).join('')+'</select></td><td><button onclick="BR.buf.splice('+i+',1);renderBr()">✕</button></td></tr>'}).join('')+'</table><button class="pri" style="margin-top:8px" onclick="brImport()">Импортировать</button>':'<div class="footer-note">Пока пусто</div>'})}
+function brImport(){return safe(function(){var n=0;BR.buf.forEach(function(b){D.jrn.push({d:b.d,ac:b.ac||D.accts[0],type:'buy',t:b.t,q:b.q,p:b.p,n:'импорт'});n++});BR.buf=[];saveState();renderBr();renderAll();toast('Импортировано сделок: '+n)})}
+function makeReport(){return safe(function(){var qm={};positions().forEach(function(p){qm[p.t]=px(p.t)});var s=pnlAll(qm);
+var lines=['Портфель на '+new Date().toLocaleString(),'Капитал: '+fmM(D.caps),'Стоимость: '+fmM(s.v),'Вложено: '+fmM(s.i),'Прибыль: '+fmM(s.p)+' ('+fmP(s.pp)+')','','Позиции:'];
+positions().forEach(function(p){lines.push('• '+p.t+': '+p.q+' шт по '+p.avg.toFixed(2)+' (сейчас '+fmN(qm[p.t]||0)+')')});
+lines.push('','Журнал ('+D.jrn.length+'):');D.jrn.slice(-20).forEach(function(t){lines.push('• '+t.d+' '+t.type+' '+t.t+' '+t.q+'×'+t.p+' ['+t.ac+']')});
+document.getElementById('br_rep').textContent=lines.join('\n')})}
+function copyReport(){return safe(function(){var t=document.getElementById('br_rep').textContent;if(!t)return;var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Скопировано')}catch(e){toast('Скопируйте вручную')}document.body.removeChild(ta)})}
+/* ---- настройки и облако ---- */
+function saveSettings(){return safe(function(){D.caps=+document.getElementById('set_cap').value||D.caps;D.riskPct=+document.getElementById('set_rp').value||D.riskPct;saveState();renderAll();toast('Настройки сохранены')})}
+function gistSave(){return safe(function(){var tk=document.getElementById('g_token').value.trim();var id=document.getElementById('g_id').value.trim();D.cfg.g_token=tk;D.cfg.g_id=id;D.cfg.g_auto=!!document.getElementById('g_auto').checked;saveState();
+if(!tk){document.getElementById('g_out').textContent='Нужен Personal Access Token (права gist).';return}
+var body=JSON.stringify({description:'INVEST INTELLIGENCE PRO data',files:{'iip.json':{content:JSON.stringify(D)}}});
+var url=id?('https://api.github.com/gists/'+id):'https://api.github.com/gists';
+fetch(url,{method:id?'PATCH':'POST',headers:{'Authorization':'token '+tk,'Content-Type':'application/json'},body:body}).then(function(r){return r.json()}).then(function(j){if(j.id){document.getElementById('g_id').value=j.id;saveState();document.getElementById('g_out').textContent='Сохранено. Gist ID: '+j.id}else document.getElementById('g_out').textContent='Ошибка GitHub: '+((j.message||'')+'')}).catch(function(e){document.getElementById('g_out').textContent='Ошибка сети: '+e.message})})}
+function gistLoad(silent){return safe(function(){var tk=document.getElementById('g_token').value.trim()||D.cfg.g_token||'';var id=document.getElementById('g_id').value.trim()||D.cfg.g_id||'';document.getElementById('g_token').value=tk;document.getElementById('g_id').value=id;D.cfg.g_token=tk;D.cfg.g_id=id;saveState();
+if(!tk||!id){if(!silent)document.getElementById('g_out').textContent='Нужны токен и Gist ID.';return}
+fetch('https://api.github.com/gists/'+id,{headers:{'Authorization':'token '+tk}}).then(function(r){return r.json()}).then(function(j){var f=j.files&&j.files['iip.json'];if(!f){document.getElementById('g_out').textContent='В gist нет файла iip.json';return}
+var d=JSON.parse(f.content);localStorage.setItem('iip_v3',JSON.stringify(d));loadState();renderAll();document.getElementById('g_out').textContent='Загружено из облака'}).catch(function(e){document.getElementById('g_out').textContent='Ошибка сети: '+e.message})})}
+function setGAuto(v){return safe(function(){D.cfg.g_auto=!!v;saveState();toast(v?'Автозагрузка из облака включена':'Автозагрузка выключена')})}
+function gistPrefill(){return safe(function(){if(D.cfg.g_token)document.getElementById('g_token').value=D.cfg.g_token;if(D.cfg.g_id)document.getElementById('g_id').value=D.cfg.g_id;if(document.getElementById('g_auto'))document.getElementById('g_auto').checked=D.cfg.g_auto===true;if(D.cfg.al)document.getElementById('al_str').value=D.cfg.al})}
+function storageTest(){return safe(function(){var ok=true;try{localStorage.setItem('iip_t','1');localStorage.removeItem('iip_t')}catch(e){ok=false}var el=document.getElementById('st_storage');if(el){el.style.display=ok?'none':'block';el.textContent=ok?'':'Внимание: браузер не сохраняет данные для этого файла (localStorage недоступен). Используйте «Экспорт JSON» после каждой сессии или разместите файл по постоянной ссылке.'}if(!ok)toast('Хранилище браузера недоступно — данные не сохранятся')})}
+function cloudBoot(){return safe(function(){if(D.cfg.g_auto&&D.cfg.g_token&&D.cfg.g_id)gistLoad(true)})}
+function testConn(){return safe(function(){document.getElementById('g_out').textContent='Проверяю…';connectMOEX();setTimeout(function(){document.getElementById('g_out').textContent='Проверка завершена — смотрите плашку в шапке.'},1500)})}
+function expJSON(){return safe(function(){var blob=new Blob([JSON.stringify(D)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='invest_intelligence_backup.json';a.click();document.getElementById('set_out').textContent='Файл резервной копии отправлен в загрузки.'})}
+function impJSON(inp){return safe(function(){var f=inp.files&&inp.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var d=JSON.parse(rd.result);localStorage.setItem('iip_v3',JSON.stringify(d));loadState();renderAll();document.getElementById('set_out').textContent='Импорт выполнен.'}catch(e){document.getElementById('set_out').textContent='Файл не разобрать: '+e.message}};rd.readAsText(f)})}
+/* ---- окно операции (статичное, вне перерисовки) ---- */
+function openOp(sym){return safe(function(){window.__open=true;var m=document.getElementById('modal');m.style.display='flex';
+var ac=document.getElementById('m_ac');ac.innerHTML=D.accts.map(function(a){return'<option>'+esc(a)+'</option>'}).join('');
+document.getElementById('m_type').value='buy';document.getElementById('m_t').value=sym||'';document.getElementById('m_q').value='';document.getElementById('m_p').value='';
+var p=sym?px(sym):null;if(isFinite(p)&&p>0)document.getElementById('m_p').value=p;
+document.getElementById('m_d').value=dStr(0);['m_hq','m_hp'].forEach(function(i){document.getElementById(i).classList.remove('on')});
+setTimeout(function(){document.getElementById('m_q').focus()},50)})}
+function closeOp(){window.__open=false;document.getElementById('modal').style.display='none'}
+function saveOp(){return safe(function(){var t=(document.getElementById('m_t').value||'').trim().toUpperCase();var q=parseFloat((document.getElementById('m_q').value||'').replace(',','.'));
+var p=parseFloat((document.getElementById('m_p').value||'').replace(',','.'));
+var hq=document.getElementById('m_hq').classList, hp=document.getElementById('m_hp').classList;hq.remove('on');hp.remove('on');
+if(!(q>0)){hq.add('on');return}if(!(p>0)){hp.add('on');return}
+D.jrn.push({d:document.getElementById('m_d').value||dStr(0),ac:document.getElementById('m_ac').value,type:document.getElementById('m_type').value,t:t,q:q,p:p,n:document.getElementById('m_note').value||''});
+saveState();closeOp();renderAll();toast('Сделка сохранена: '+t+' '+q+'×'+p)})}
+function addAcct(){return safe(function(){var n=prompt('Название счёта:');if(!n)return;D.accts.push(n.trim());saveState();renderAll()})}
+function addFlow(type){return safe(function(){var v=parseFloat(prompt(type==='in'?'Сумма пополнения:':'Сумма снятия:').replace(',','.'));if(!(v>0))return;D.flows.push({d:dStr(0),type:type,v:v});saveState();renderAnalytics()})}
+/* ---- навигация и общий рендер ---- */
+var CUR='overview';
+function go(id){return safe(function(){CUR=id;document.querySelectorAll('#nav button').forEach(function(b){b.classList.toggle('on',b.dataset.s===id)});
+document.querySelectorAll('main .tab').forEach(function(s){s.classList.toggle('on',s.id==='sec-'+id)});
+renderTab(id)})}
+function renderTab(id){return safe(function(){if(id==='overview')renderOverview();if(id==='portfolio')renderPortfolio();if(id==='analytics')renderAnalytics();if(id==='alloc')renderAlloc();if(id==='risk'){document.getElementById('r_cap').value=D.caps;document.getElementById('r_rp').value=D.riskPct}if(id==='scanner'&&SCAN.rows.length)renderExitPanel();if(id==='settings'){document.getElementById('set_cap').value=D.caps;document.getElementById('set_rp').value=D.riskPct}})}
+function renderAll(){return safe(function(){fillAlSelect();if(D.cfg.al)document.getElementById('al_str').value=D.cfg.al;renderOverview();renderPortfolio();renderAnalytics();renderAlloc();renderTest();renderStrat();renderEduReal();renderBr();var s=document.getElementById('s_tf');s.value=D.cfg.tf||'D';document.getElementById('s_top').value=String(D.cfg.topn||60)})}
+function renderOvSig(){return safe(function(){var el=document.getElementById('ov_sig');if(D.scanSig)el.innerHTML='Лучший сигнал: <b>'+esc(D.scanSig.t)+'</b> — '+esc(D.scanSig.v)+'. Подробности во вкладке «Сканер».'})}
+function renderOverview(){return safe(function(){var qm={};positions().forEach(function(p){qm[p.t]=px(p.t)});var s=pnlAll(qm);
+document.getElementById('ov_kpis').innerHTML='<div class="kpi"><small>Стоимость портфеля</small><b>'+fmM(s.v)+'</b></div><div class="kpi"><small>Вложено</small><b>'+fmM(s.i)+'</b></div><div class="kpi"><small>Прибыль</small><b class="'+(s.p>=0?'grn':'red')+'">'+fmM(s.p)+' ('+fmP(s.pp)+')</b></div><div class="kpi"><small>Позиций</small><b>'+positions().length+'</b></div>';
+var ps=positions();document.getElementById('ov_pos').innerHTML=ps.length?'<table><tr><th>Тикер</th><th class="r">Кол-во</th><th class="r">Средняя</th><th class="r">Сейчас</th><th class="r">P/L</th></tr>'+ps.map(function(p){var pr=qm[p.t]||p.avg;var pnl=(pr-p.avg)/p.avg*100;return'<tr><td><b>'+esc(p.t)+'</b></td><td class="r">'+p.q+'</td><td class="r">'+p.avg.toFixed(2)+'</td><td class="r">'+(isFinite(pr)?pr.toFixed(2):'—')+'</td><td class="r '+(pnl>=0?'grn':'red')+'">'+fmP(pnl)+'</td></tr>'}).join('')+'</table>':'Позиций нет. Внесите сделки через «Портфель».'})}
+function refreshQuotes(){return safe(function(){var ps=positions();if(!ps.length){toast('Сначала внесите сделки');return}var qm={};var seq=Promise.resolve();
+ps.forEach(function(p){seq=seq.then(function(){return iss('engines/stock/markets/shares/boards/TQBR/securities/'+encodeURIComponent(p.t)+'.json?iss.meta=off&iss.only=marketdata').then(function(j){var r=j&&j.marketdata&&j.marketdata.data&&j.marketdata.data[0];if(r){var last=r[4],prev=r[5];var c=j.marketdata.columns;var iL=c.indexOf('LAST'),iC=c.indexOf('LCLOSEPRC');var v=r[iL]!=null?r[iL]:(r[iC]!=null?r[iC]:null);if(v!=null&&isFinite(+v))qm[p.t]=+v;LASTPX[p.t]=+v}}).catch(function(){})})});
+seq.then(function(){rememberPx(positions().map(function(p){return{t:p.t,p:qm[p.t]||LASTPX[p.t]||p.avg}}));positions().forEach(function(p){if(qm[p.t])LASTPX[p.t]=qm[p.t]});renderOverview();if(CUR==='analytics')renderAnalytics();toast('Котировки обновлены')})})}
+function isSession(){var d=new Date(),day=d.getDay(),h=d.getHours()+d.getMinutes()/60;return day>=1&&day<=5&&h>=6.83&&h<=23.83}
+function setScanAuto(v){return safe(function(){D.cfg.sauto=+v||0;saveState();if(window.__sai){clearInterval(window.__sai);window.__sai=null}if(D.cfg.sauto)window.__sai=setInterval(scanAutoTick,D.cfg.sauto*1000);toast(D.cfg.sauto?'Автоскан каждые '+(D.cfg.sauto/60)+' мин':'Автоскан выключен')})}
+function restoreScanAuto(){return safe(function(){var el=document.getElementById('s_auto');if(el)el.value=String(D.cfg.sauto||0);if(D.cfg.sauto)setScanAuto(D.cfg.sauto)})}
+function scanAutoTick(){return safe(function(){if(SCAN.busy||document.hidden)return;if(CUR!=='scanner')return;if(!isSession()){var el=document.getElementById('s_last');if(el)el.textContent='вне сессии — автоскан на паузе';return}scanRun()})}
+function setAuto(v){return safe(function(){D.cfg.auto=+v||0;saveState();if(window.__ai)clearInterval(window.__ai);window.__ai=null;if(D.cfg.auto)window.__ai=setInterval(autoTick,D.cfg.auto*1000);toast(D.cfg.auto?'Автообновление каждые '+D.cfg.auto+' с':'Автообновление выключено')})}
+function restoreAuto(){return safe(function(){if(D.cfg.auto)setAuto(D.cfg.auto)})}
+var AUTO_N=0;
+function autoTick(){return safe(function(){if(window.__open||document.hidden)return;AUTO_N++;refreshQuotes();if(CUR==='scanner'&&AUTO_N%3===0)scanRun()})}
+function renderPortfolio(){return safe(function(){var qm={};positions().forEach(function(p){qm[p.t]=px(p.t)});
+document.getElementById('pf_accts').innerHTML=D.accts.map(function(a){var n=D.jrn.filter(function(t){return t.ac===a}).length;return'<span class="badge2" style="margin:2px 4px 2px 0">'+esc(a)+' — операций: '+n+'</span>'}).join('');
+document.getElementById('pf_pos').innerHTML=positions().length?'<table><tr><th>Тикер</th><th class="r">Кол-во</th><th class="r">Средняя</th><th class="r">Стоимость</th><th class="r">P/L</th><th></th></tr>'+positions().map(function(p,i){var pr=qm[p.t]||p.avg;var pnl=(pr-p.avg)/p.avg*100;return'<tr><td><b>'+esc(p.t)+'</b></td><td class="r">'+p.q+'</td><td class="r">'+p.avg.toFixed(2)+'</td><td class="r">'+fmM(pr*p.q)+'</td><td class="r '+(pnl>=0?'grn':'red')+'">'+fmP(pnl)+'</td><td><button onclick="openOp(\''+p.t+'\')">+</button></td></tr>'}).join('')+'</table>':'Позиций нет.';
+document.getElementById('pf_jrn').innerHTML=D.jrn.length?'<tr><th>Дата</th><th>Счёт</th><th>Тип</th><th>Тикер</th><th class="r">Кол-во</th><th class="r">Цена</th><th>Комментарий</th></tr>'+D.jrn.slice().reverse().map(function(t){return'<tr><td>'+esc(t.d)+'</td><td>'+esc(t.ac)+'</td><td class="'+(t.type==='buy'?'grn':'red')+'">'+t.type+'</td><td>'+esc(t.t)+'</td><td class="r">'+t.q+'</td><td class="r">'+t.p+'</td><td style="white-space:normal">'+esc(t.n||'')+'</td></tr>'}).join(''):'<tr><td>Пусто — добавьте первую сделку</td></tr>'})}
+function renderAnalytics(){return safe(function(){var parts={};var qm={};positions().forEach(function(p){qm[p.t]=px(p.t)});
+positions().forEach(function(p){var v=(qm[p.t]||p.avg)*p.q;var sec=D.sectors[p.t]||'Прочее';parts[sec]=(parts[sec]||0)+v});
+var arr=Object.keys(parts).map(function(k){return{n:k,v:parts[k]}}).sort(function(a,b){return b.v-a.v});
+drawDonut(document.getElementById('an_donut'),arr.length?arr:[['Прочее',1]],fmM(portfolioVal(qm)));
+document.getElementById('an_sect').textContent=arr.length?'Сектор бумаг можно задать в импорте отчёта или вручную; без данных все бумаги попадают в «Прочее».':'Нет позиций.';
+var fm={};D.flows.forEach(function(f){fm[f.d]=(fm[f.d]||0)+(f.type==='in'?f.v:-f.v)});
+var items=Object.keys(fm).sort().map(function(d){return{n:d,v:fm[d]}}).slice(-12);
+drawBars(document.getElementById('an_flows'),items,fmN);
+var snaps=D.snaps.slice(-24);drawLineChart(document.getElementById('an_curve'),snaps.map(function(s){return[s.d,s.v]}),fmM,'#4a9eff',true);
+document.getElementById('an_snaps').innerHTML=snaps.length?'<table><tr><th>Дата</th><th class="r">Стоимость</th></tr>'+snaps.map(function(s){return'<tr><td>'+esc(s.d)+'</td><td class="r">'+fmM(s.v)+'</td></tr>'}).join('')+'</table>':'Снапшотов нет — сохраните первый.'})}
+function saveSnap(){return safe(function(){var qm={};positions().forEach(function(p){qm[p.t]=px(p.t)});D.snaps.push({d:new Date().toLocaleString(),v:portfolioVal(qm),i:invested()});saveState();renderAnalytics();toast('Снапшот сохранён')})}
+/* ---- запуск ---- */
+function initNav(){return safe(function(){document.querySelectorAll('#nav button').forEach(function(b){b.onclick=function(){go(b.dataset.s)}})})}
+function initModal(){return safe(function(){document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeOp()})})}
+function boot(){safe(function(){loadState()});
+safe(function(){initNav()});
+safe(function(){fillAlSelect();renderAll();go('overview')});
+safe(function(){connectMOEX()});
+safe(function(){restoreAuto()});
+safe(function(){restoreScanAuto()});
+safe(function(){gistPrefill()});
+safe(function(){storageTest()});
+safe(function(){cloudBoot()})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+</script>
+</body></html>
